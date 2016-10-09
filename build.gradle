@@ -15,11 +15,13 @@ mainClassName = "th.chanwit.MiraMain"
 
 repositories {
     jcenter()
+    maven { url 'http://dl.bintray.com/gesellix/docker-utils' }
 }
 
 dependencies {
-    compile 'org.codehaus.groovy:groovy-all:2.4.7'
+    compile 'org.codehaus.groovy:groovy:2.4.7'
     compile 'org.slf4j:slf4j-api:1.7.21'
+    compile 'de.gesellix:docker-client:2016-10-07T18-47-59'
 
     testCompile 'junit:junit:4.12'
 }
