@@ -21,23 +21,17 @@ repositories {
 dependencies {
     compile 'org.codehaus.groovy:groovy:2.4.7'
     compile 'org.slf4j:slf4j-api:1.7.21'
+    compile 'org.slf4j:slf4j-nop:1.7.21'
+
     compile 'de.gesellix:docker-client:2016-10-07T18-47-59'
 
     testCompile 'junit:junit:4.12'
 }
 
-jar {
-  manifest { 
-    attributes "Main-Class": "$mainClassName"
-  }  
-
-  from {
-    configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
-  }
-}
-
-
+//
+// java -Done-jar.silent=true -jar build/libs/mira-standalone.jar down
+//
 task onejar(type: OneJar) {
   mainClass = mainClassName
-  useStable = false
+  useStable = true
 }

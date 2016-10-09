@@ -2,5 +2,6 @@ package th.chanwit
 
 enum SubCommand {
   service,
-  machine
+  machine,
+  // build
 }
