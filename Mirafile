@@ -1,0 +1,6 @@
+docker service ls
+
+docker service create (
+  name: "test"
+)
+
