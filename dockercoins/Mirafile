@@ -1,0 +1,56 @@
+REPO = "chanwit"
+TAG  = "v1"
+
+services = [rng, hasher, redis, webui, worker]
+
+task(build) {
+  services.each {
+    docker build (tag: "$REPO/$it:$TAG", it)
+  }
+}
+
+task(up) {
+
+  docker network create (driver: overlay, mynet)
+
+  docker service create (
+    name:    rng,
+    network: [mynet],
+    image:   "$REPO/rng:$TAG",
+  )
+  docker service create (
+    name:    hasher,
+    network: [mynet],
+    image:   "$REPO/hasher:$TAG",
+  )
+  docker service create (
+    name:    redis,
+    network: [mynet],
+    image:   redis,
+  )
+  docker service create (
+    name:    webui,
+    network: [mynet],
+    image:   "$REPO/webui:$TAG",
+    publish: [ 80:80 ],
+  )
+  docker service create (
+    name:    worker,
+    network: [mynet],
+    image:   "$REPO/worker:$TAG",
+  )
+}
+
+task(down) {
+  services.each {
+    docker service rm it
+  }
+
+  docker network rm mynet
+}
+
+task(push) {
+  (services - [redis]).each {
+    docker push "$REPO/$it:$TAG"
+  }
+}
