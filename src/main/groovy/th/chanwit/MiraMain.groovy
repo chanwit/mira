@@ -8,20 +8,15 @@ import de.gesellix.docker.client.config.*
 
 class MiraMain {
 
-  static docker = { SubCommand sub ->
-    switch(sub) {
-        case SubCommand.service:
-          DockerEnv env = (DockerEnv)BaseScript.envLocal.get()
-          DockerClient cli
-          if(env) {
-            cli = new DockerClientImpl(env)
-          } else {
-            cli = new DockerClientImpl()
-          }
-          return new ServiceCommand(cli)
-        case SubCommand.machine:
-          return new MachineCommand()
+  static DockerClient createClient() {
+    DockerEnv env = (DockerEnv)BaseScript.envLocal.get()
+    DockerClient cli
+    if(env) {
+      cli = new DockerClientImpl(env)
+    } else {
+      cli = new DockerClientImpl()
     }
+    return cli
   }
 
   static curl = {String url ->
@@ -35,6 +30,7 @@ class MiraMain {
     def push
   }
 
+  // alias to 'task'
   static define = { MiraAction act, Closure c ->
     switch(act) {
       case MiraAction.up:
@@ -48,10 +44,47 @@ class MiraMain {
     }
   }
 
+  // handle sub-commands
+  static docker = { MiraAction sub ->
+    switch(sub) {
+      case MiraAction.service:
+        return new ServiceCommand(createClient())
+      case MiraAction.machine:
+        return new MachineCommand()
+      case MiraAction.network:
+        return new NetworkCommand(createClient())
+      case MiraAction.push:
+        return new PushCommand(createClient())
+      default:
+        // top-level comand, discard
+        return null
+    }
+  }
+
   static void main(String[] args) {
+
+    // handle top-level commands
+    MiraAction.metaClass.call = { sym ->
+      switch("$delegate") {
+        case "push":
+          return new PushCommand(createClient()).push("$sym")
+        default:
+          throw new Exception("NYI: $delegate")
+      }
+    }
+
+    // handle top-level commands
+    MiraAction.metaClass.call = { Map map, Symbol sym ->
+      switch("$delegate") {
+        case "build":
+          return new BuildCommand(createClient()).build(map, sym)
+        default:
+          throw new Exception("NYI: $delegate")
+      }
+    }
+
     def imports = new ImportCustomizer()
     imports.addStaticStars "th.chanwit.MiraAction"
-    imports.addStaticStars "th.chanwit.SubCommand"
 
     def config = new CompilerConfiguration()
     config.addCompilationCustomizers(imports)
@@ -71,12 +104,16 @@ class MiraMain {
 
     shell.evaluate new File("Mirafile")
 
-    def action = "up"
-    if(args.size() >= 1) {
-      action = args[0]
+    if(args.size() == 0) {
+      println "up:"
+      holder.up()
+    } else {
+      // mira build up
+      args.each { action ->
+        println "$action:"
+        holder."${action}"()
+      }
     }
-
-    holder."${action}"()
   }
 
 }

@@ -1,5 +1,8 @@
 package th.chanwit
 
+import groovy.transform.EqualsAndHashCode
+
+@EqualsAndHashCode
 class Symbol {
 
 	String val

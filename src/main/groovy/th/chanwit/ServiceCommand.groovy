@@ -13,9 +13,9 @@ class ServiceCommand {
   def create(Map map, String args="") {
     if (!map["image"]) throw new Exception("service create: no 'image' specified")
 
-    def publish = []
+    def publishes = []
     if(map["publish"]) {
-      publish = map["publish"].collect { k, v ->
+      publishes = map["publish"].collect { k, v ->
         def protocol = "tcp"
         if("$v".contains("/")) {
           def parts = "$v".split("/")
@@ -31,6 +31,12 @@ class ServiceCommand {
       }
     }
 
+    def networks = [:]
+    if(map['network']) {
+      // convert Symbol to string
+      networks = map['network'].collect { [Target:"$it"] }
+    }
+
     def replicas = 1
     if(map["replicas"]) {
       replicas = map["replicas"]
@@ -40,14 +46,14 @@ class ServiceCommand {
     def serviceConfig = [
       "Name": "${map['name']}",
       "TaskTemplate": [
-      "ContainerSpec": [
-        "Image": "${map['image']}",
-      ],
-      "Resources": [
-        "Limits": [:],
-        "Reservations": [:],
-      ],
-      "RestartPolicy": [:],
+        "ContainerSpec": [
+          "Image": "${map['image']}",
+        ],
+        "Resources": [
+          "Limits": [:],
+          "Reservations": [:],
+        ],
+        "RestartPolicy": [:],
         "Placement": [:],
       ],
       "Mode": [
@@ -59,15 +65,19 @@ class ServiceCommand {
         "Parallelism": 1
       ],
       "EndpointSpec": [
-        "Ports": publish
-      ]
+        "Ports": publishes,
+      ],
+      "Networks": networks,
     ]
-
-    dockerClient.createService(serviceConfig).content.ID
+    // println serviceConfig
+    def id = dockerClient.createService(serviceConfig).content.ID
+    println "${id[0..11]} service '${map['name']}' created from ${map['image']}"
+    return id
   }
 
   def rm(name) {
-    dockerClient.rmService("$name")
+    def result = dockerClient.rmService("$name")
+    println "$name service removed"
   }
 
   def ls(args) {
