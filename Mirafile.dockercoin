@@ -10,37 +10,13 @@ task(up) {
 		mynet
 	)
 
-	docker service create (
-		name:  rng,
-		network: [mynet],
-		image: "$REPO/rng:$TAG"
-	)
-
-	docker service create (
-		name:  hasher,
-		network: [mynet],
-		image: "$REPO/hasher:$TAG"
-	)
-
-	docker service create (
-		name: redis,
-		image: redis
-	)
-
-	docker service create (
-		name:  webui,
-		network: [mynet],
-		image: "$REPO/webui:$TAG",
-		publish: [
-			80:80
-		]
-	)
-
-	docker service create (
-		name:  worker,
-		network: [mynet],
-		image: "$REPO/worker:$TAG"
-	)
+	services.each { service ->
+		docker service create (
+			name:  rng,
+			network: [mynet],
+			image: "$REPO/$service:$TAG"
+		)
+	}
 }
 
 task(down) {
@@ -52,11 +28,14 @@ task(down) {
 }
 
 task(build) {
-	services.each { service ->
+	services.each { s ->
+		println s
+		/*
 		docker build (
 			tag: "$REPO/$service:$TAG",
 			service
 		)
+		*/
 	}
 }
 

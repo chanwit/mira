@@ -53,6 +53,9 @@ class MiraMain {
         return new MachineCommand()
       case MiraAction.network:
         return new NetworkCommand(createClient())
+      case MiraAction.swarm:
+        return new SwarmCommand(createClient())
+      // TODO: fixing stuff
       case MiraAction.push:
         return new PushCommand(createClient())
       default:

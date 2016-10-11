@@ -1,9 +1,10 @@
+MACHINE_HOME = "c:/test"
 REPO = "chanwit"
 TAG  = "v1"
 
+services = [worker, webui, redis, hasher, rng]
+
 task(up) {
-	docker machine env dragon
-	println REPO
 	docker service create (
 		name:  nginx,
 		image: nginx,
@@ -11,7 +12,15 @@ task(up) {
 }
 
 task(down) {
-	docker machine env dragon
-
 	docker service rm nginx
+}
+
+task(push) {
+	TOKEN = docker swarm join-token manager
+	println TOKEN
+	TOKEN = docker swarm join-token worker
+	println TOKEN
+	// docker network create (driver: "overlay", mynet)
+	// docker push "chanwit/webui:v1"
+	// docker push "chanwit/webui:v1"
 }

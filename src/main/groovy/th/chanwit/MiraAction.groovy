@@ -4,6 +4,7 @@ enum MiraAction {
 	service,
 	machine,
 	network,
+	swarm,
 	/* build */
 
 	build,
