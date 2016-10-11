@@ -1,0 +1,12 @@
+DO_1GB_SGP = [
+	driver: "digitalocean",
+	digitalocean: [
+		"image":    "docker-16-04",
+		"size":     "1GB",
+		"region":   "sgp1",
+		"ssh-user": "root",
+	],
+	engine: [
+		"storage-driver": "overlay2"
+	]
+]

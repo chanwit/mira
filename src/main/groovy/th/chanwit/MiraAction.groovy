@@ -11,6 +11,8 @@ enum MiraAction {
 	up,
 	down,
 	push,
+	provision,
+	clean,
 
 	// special action as the return value
 	error

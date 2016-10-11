@@ -2,6 +2,8 @@ MACHINE_HOME = "c:/test"
 REPO = "chanwit"
 TAG  = "v1"
 
+include 'digitalocean.templates'
+
 services = [worker, webui, redis, hasher, rng]
 
 task(up) {
@@ -15,11 +17,25 @@ task(down) {
 	docker service rm nginx
 }
 
+task(provision) {
+	20.times {
+		docker machine create DO_1GB_SGP, "dragon-$it"
+	}
+}
+
+task(clean) {
+	20.times {
+		docker machine rm "dragon-$it"
+	}
+}
+
 task(push) {
+	/*
 	TOKEN = docker swarm join-token manager
 	println TOKEN
 	TOKEN = docker swarm join-token worker
 	println TOKEN
+	*/
 	// docker network create (driver: "overlay", mynet)
 	// docker push "chanwit/webui:v1"
 	// docker push "chanwit/webui:v1"

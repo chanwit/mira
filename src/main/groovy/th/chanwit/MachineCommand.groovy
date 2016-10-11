@@ -2,6 +2,7 @@ package th.chanwit
 
 import de.gesellix.docker.client.config.*
 import groovy.json.JsonSlurper
+import java.util.concurrent.*
 
 class MachineCommand {
 
@@ -22,6 +23,48 @@ class MachineCommand {
 		)
 		BaseScript.envLocal.set(result)
 		return result
+	}
+
+	private static pool = Executors.newFixedThreadPool(10)
+	private static ecs  = new ExecutorCompletionService<Void>(pool)
+
+	private static void doWait() {
+		pool.shutdown()
+		pool.awaitTermination(1, TimeUnit.HOURS)
+	}
+
+	def create(Map map, arg) {
+		def driver = map['driver']
+		def driverMap = map[driver]
+		def driverArgs = driverMap.collect { k, v ->
+			if(v == false) {
+				return []
+			} else if (v==true) {
+				return ["--$driver-$k"]
+			}
+			return ["--$driver-$k", "$v"]
+		}.flatten()
+
+		def engineMap = map['engine']
+		def engineArgs = engineMap.collect { k, v ->
+			return ["--engine-$k", "$v"]
+		}.flatten()
+
+		def cmd = ["docker-machine", "create", "-d", driver] +
+			driverArgs +
+			engineArgs +
+			["$arg"]
+
+		ecs.submit({
+			def proc = cmd.execute()
+			proc.waitForProcessOutput( System.out, System.err )
+		} as Runnable, Void)
+	}
+
+	def rm(arg) {
+		def cmd = ["docker-machine", "rm", "-f", "$arg"]
+		def proc = cmd.execute()
+		proc.waitForProcessOutput( System.out, System.err )
 	}
 
 	private _env() {

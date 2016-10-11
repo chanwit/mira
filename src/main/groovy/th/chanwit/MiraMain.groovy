@@ -28,20 +28,14 @@ class MiraMain {
     def down
     def build
     def push
+
+    def provision
+    def clean
   }
 
   // alias to 'task'
   static define = { MiraAction act, Closure c ->
-    switch(act) {
-      case MiraAction.up:
-        delegate.up = c; break
-      case MiraAction.down:
-        delegate.down = c; break
-      case MiraAction.build:
-        delegate.build = c; break
-      case MiraAction.push:
-        delegate.push = c; break
-    }
+    delegate."$act" = c
   }
 
   // handle sub-commands
@@ -95,12 +89,20 @@ class MiraMain {
     def holder = new Holder()
     define.delegate = holder
 
+    def include = { String incFile ->
+      def binding = delegate
+      def incShell = new GroovyShell(binding, config)
+      incShell.evaluate new File(incFile)
+    }
+
     def binding = new Binding(
-      docker: docker,
-      curl:   curl,
-      define: define,
-      task:   define,
+      docker:  docker,
+      curl:    curl,
+      define:  define,
+      task:    define,
+      include: include,
     )
+    include.delegate = binding
 
     config.setScriptBaseClass("th.chanwit.BaseScript")
     def shell = new GroovyShell(binding, config)
@@ -115,6 +117,7 @@ class MiraMain {
       args.each { action ->
         println "$action:"
         holder."${action}"()
+        MachineCommand.doWait()
       }
     }
   }
