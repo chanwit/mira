@@ -2,7 +2,8 @@ MACHINE_HOME = "c:/test"
 REPO = "chanwit"
 TAG  = "v1"
 
-include 'digitalocean.templates'
+include template: 'digitalocean.templates'
+apply   plugin: 'calico'
 
 services = [worker, webui, redis, hasher, rng]
 
