@@ -1,10 +1,26 @@
+include template: 'digitalocean'
+apply plugin: "swarm"
+
 REPO = "chanwit"
 TAG  = "v1"
 
-services = [rng, hasher, redis, webui, worker]
+SERVICES = [rng, hasher, redis, webui, worker]
+
+swarm {
+  managers mg0
+  workers  node1, node2, node3
+}
+
+task(provision) {
+  docker machine create (DO_SGP_512MB, mg0)
+
+  4.times {
+    docker machine create (DO_SGP_512MB, "node${it}")
+  }
+}
 
 task(build) {
-  services.each {
+  SERVICES.each {
     docker build (tag: "$REPO/$it:$TAG", it)
   }
 }
@@ -39,18 +55,21 @@ task(up) {
     network: [mynet],
     image:   "$REPO/worker:$TAG",
   )
+
 }
 
 task(down) {
-  services.each {
-    docker service rm it
-  }
-
+  SERVICES.each { docker service rm it }
   docker network rm mynet
 }
 
+task(clean) {
+  docker machine rm node0, node1, node2, node3
+  docker machine rm mg0
+}
+
 task(push) {
-  (services - [redis]).each {
+  (SERVICES - [redis]).each {
     docker push "$REPO/$it:$TAG"
   }
 }

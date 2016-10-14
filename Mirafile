@@ -2,10 +2,17 @@ MACHINE_HOME = "c:/test"
 REPO = "chanwit"
 TAG  = "v1"
 
-include template: 'digitalocean.templates'
-apply   plugin: 'calico'
+include 'digitalocean.templates'
+apply plugin: 'swarm'
 
 services = [worker, webui, redis, hasher, rng]
+
+INSTANCES = 10
+
+swarm {
+	managers dragon0..dragon2
+	workers  dragon3..dragon9
+}
 
 task(up) {
 	docker service create (
@@ -19,14 +26,14 @@ task(down) {
 }
 
 task(provision) {
-	20.times {
-		docker machine create DO_1GB_SGP, "dragon-$it"
+	INSTANCES.times {
+		docker machine create DO_1GB_SGP, "dragon$it"
 	}
 }
 
 task(clean) {
-	20.times {
-		docker machine rm "dragon-$it"
+	INSTANCES.times {
+		docker machine rm "dragon$it"
 	}
 }
 

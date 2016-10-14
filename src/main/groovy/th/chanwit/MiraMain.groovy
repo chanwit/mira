@@ -6,6 +6,8 @@ import org.codehaus.groovy.control.CompilerConfiguration
 import de.gesellix.docker.client.*
 import de.gesellix.docker.client.config.*
 
+import th.chanwit.plugin.SwarmModePlugin
+
 class MiraMain {
 
   static DockerClient createClient() {
@@ -95,14 +97,29 @@ class MiraMain {
       incShell.evaluate new File(incFile)
     }
 
+    def plugins = []
+
+    def apply = { Map map ->
+      def binding = delegate
+      switch(map['plugin']) {
+        case 'swarm':
+          def p = new SwarmModePlugin()
+          p.init(binding)
+          plugins << p
+          break
+      }
+    }
+
     def binding = new Binding(
       docker:  docker,
       curl:    curl,
       define:  define,
       task:    define,
       include: include,
+      apply:   apply,
     )
     include.delegate = binding
+    apply.delegate = binding
 
     config.setScriptBaseClass("th.chanwit.BaseScript")
     def shell = new GroovyShell(binding, config)
@@ -117,7 +134,13 @@ class MiraMain {
       args.each { action ->
         println "$action:"
         holder."${action}"()
-        MachineCommand.doWait()
+
+        if ("$action" == "provision") {
+          MachineCommand.doWait()
+          for(p in plugins) {
+            p.afterProvision()
+          }
+        }
       }
     }
   }
