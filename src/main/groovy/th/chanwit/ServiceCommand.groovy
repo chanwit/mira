@@ -76,8 +76,12 @@ class ServiceCommand {
   }
 
   def rm(name) {
-    def result = dockerClient.rmService("$name")
-    println "$name service removed"
+    try {
+      def result = dockerClient.rmService("$name")
+      println "$name service removed"
+    } catch(e) {
+      println "failed to remove $name"
+    }
   }
 
   def ls(args) {

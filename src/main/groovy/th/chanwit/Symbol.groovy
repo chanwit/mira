@@ -31,6 +31,12 @@ class Symbol implements Comparable {
 		return new Symbol("$prefix${num+1}")
     }
 
+    def getAt(IntRange r) {
+    	r.collect {
+      		new Symbol("$val$it")
+    	}
+  	}
+
 	String toString() {
 		return this.val
 	}

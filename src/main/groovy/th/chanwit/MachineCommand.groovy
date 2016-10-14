@@ -34,6 +34,16 @@ class MachineCommand {
 	}
 
 	def create(Map map, arg) {
+		if(arg instanceof List) {
+			arg.each {
+				_create(map, it)
+			}
+		} else {
+			_create(map, arg)
+		}
+	}
+
+	def _create(Map map, arg) {
 		def driver = map['driver']
 		def driverMap = map[driver]
 		def driverArgs = driverMap.collect { k, v ->
@@ -62,6 +72,16 @@ class MachineCommand {
 	}
 
 	def rm(arg) {
+		if(arg instanceof List) {
+			arg.each {
+				_rm(it)
+			}
+		} else {
+			_rm(arg)
+		}
+	}
+
+	def _rm(arg) {
 		def cmd = ["docker-machine", "rm", "-f", "$arg"]
 		def proc = cmd.execute()
 		proc.waitForProcessOutput( System.out, System.err )

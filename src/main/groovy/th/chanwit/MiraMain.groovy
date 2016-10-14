@@ -63,7 +63,7 @@ class MiraMain {
   static void main(String[] args) {
 
     // handle top-level commands
-    MiraAction.metaClass.call = { sym ->
+    MiraAction.metaClass.call = { Symbol sym ->
       switch("$delegate") {
         case "push":
           return new PushCommand(createClient()).push("$sym")
@@ -91,10 +91,11 @@ class MiraMain {
     def holder = new Holder()
     define.delegate = holder
 
-    def include = { String incFile ->
-      def binding = delegate
+    def include = { Map map ->
+      def incFile  = map['template']
+      def binding  = delegate
       def incShell = new GroovyShell(binding, config)
-      incShell.evaluate new File(incFile)
+      incShell.evaluate new File("${incFile}.tmpl")
     }
 
     def plugins = []
@@ -121,6 +122,13 @@ class MiraMain {
     include.delegate = binding
     apply.delegate = binding
 
+    // if action got call with closure,
+    // it should be delegate to plugin
+    MiraAction.metaClass.call = { Closure c ->
+      def action = binding["$delegate"]
+      action.call(c)
+    }
+
     config.setScriptBaseClass("th.chanwit.BaseScript")
     def shell = new GroovyShell(binding, config)
 
@@ -133,13 +141,26 @@ class MiraMain {
       // mira build up
       args.each { action ->
         println "$action:"
+        switch("$action") {
+          case "up":
+            for(p in plugins) {
+              p.beforeUp()
+            }
+            break
+          case "down":
+            for(p in plugins) {
+              p.beforeDown()
+            }
+            break
+        }
         holder."${action}"()
-
-        if ("$action" == "provision") {
-          MachineCommand.doWait()
-          for(p in plugins) {
-            p.afterProvision()
-          }
+        switch("$action") {
+          case "provision":
+            MachineCommand.doWait()
+            for(p in plugins) {
+              p.afterProvision()
+            }
+            break
         }
       }
     }

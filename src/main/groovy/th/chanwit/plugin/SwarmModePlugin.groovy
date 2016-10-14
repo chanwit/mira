@@ -3,6 +3,7 @@ package th.chanwit.plugin
 import groovy.json.*
 import de.gesellix.docker.client.*
 import de.gesellix.docker.client.config.*
+import th.chanwit.*
 
 class SwarmModePlugin /* implements Plugin*/  {
 
@@ -25,25 +26,34 @@ class SwarmModePlugin /* implements Plugin*/  {
 			managers(args)
 		}
 		def managers(Object[] args) {
-			if(args.size() == 1 && args[0] instanceof Range) {
-				args[0].each {
-					plugin.managers	<< it
+			args.each {
+				if (it instanceof Range) {
+					it.each { m ->
+						plugin.managers << m
+					}
+				} else if (it instanceof List) {
+					plugin.managers += it
+				} else {
+					plugin.managers << it
 				}
-			} else {
-				plugin.managers = args
 			}
 		}
 
 		def worker(Object[] args) {
 			workers(args)
 		}
+
 		def workers(Object[] args) {
-			if(args.size() == 1 && args[0] instanceof Range) {
-				args[0].each {
-					plugin.workers	<< it
+			args.each {
+				if (it instanceof Range) {
+					it.each { w ->
+						plugin.workers << w
+					}
+				} else if (it instanceof List) {
+					plugin.workers += it
+				} else {
+					plugin.workers << it
 				}
-			} else {
-				plugin.workers = args
 			}
 		}
 	}
@@ -59,9 +69,9 @@ class SwarmModePlugin /* implements Plugin*/  {
 		String text = new File(dir, "config.json").text
 		def json = new JsonSlurper().parseText(text)
 		DockerEnv result = new DockerEnv(
-			tlsVerify: "1",
+			tlsVerify:  "1",
 			dockerHost: "tcp://${json['Driver']['IPAddress']}:2376",
-			certPath: dir,
+			certPath:   dir,
 		)
 		def ip = json['Driver']['IPAddress']
 		return [ip, result]
@@ -117,4 +127,17 @@ class SwarmModePlugin /* implements Plugin*/  {
 		}
 	}
 
+	def beforeUp() {
+		if (managers.size() > 0) {
+			println "(${managers[0]}) set as docker host by swarm plugin"
+			new MachineCommand().env(managers[0])
+		}
+	}
+
+	def beforeDown() {
+		if (managers.size() > 0) {
+			println "(${managers[0]}) set as docker host by swarm plugin"
+			new MachineCommand().env(managers[0])
+		}
+	}
 }
