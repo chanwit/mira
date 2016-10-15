@@ -25,7 +25,9 @@ dependencies {
 
     compile 'de.gesellix:docker-client:2016-10-07T18-47-59'
 
-    testCompile 'junit:junit:4.12'
+    testCompile("org.spockframework:spock-core:1.0-groovy-2.4") {
+        exclude group:"org.codehaus.groovy", module:"groovy-all"
+    }
 }
 
 //

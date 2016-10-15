@@ -1,8 +1,5 @@
 package th.chanwit
 
-import groovy.transform.EqualsAndHashCode
-
-@EqualsAndHashCode
 class Symbol implements Comparable {
 
 	String val
@@ -16,18 +13,34 @@ class Symbol implements Comparable {
 		new Symbol("-${val}")
 	}
 
-	def previous() {
-		new Symbol("--${val}")
+	private split() {
+		def m = this.val =~ /([a-zA-Z][a-zA-Z\-]*)(\d+)/
+		def prefix = m[0][1]
+		def num = Integer.valueOf(m[0][2])
+		return [prefix, num]
 	}
 
     int compareTo(java.lang.Object b) {
-		return this.val.compareTo(b.val)
+    	try {
+    		def (prefix_a, num_a) = split()
+    		def (prefix_b, num_b) = b.split()
+
+			if (prefix_a == prefix_b) {
+				return num_a <=> num_b
+			}
+
+		} catch(e) { }
+
+		return this.val <=> b.val
     }
 
+	def previous() {
+		def (prefix, num) = split()
+		return new Symbol("$prefix${num-1}")
+	}
+
     def next() {
-		def m = this.val =~ /(\w+)(\d+)/
-		def prefix = m[0][1]
-		def num = Integer.valueOf(m[0][2])
+		def (prefix, num) = split()
 		return new Symbol("$prefix${num+1}")
     }
 
@@ -39,5 +52,14 @@ class Symbol implements Comparable {
 
 	String toString() {
 		return this.val
+	}
+
+	int hashCode() {
+		try {
+			def (prefix, num) = split()
+			return prefix.hashCode() + num
+		} catch(e) {
+			return this.val.hashCode()
+		}
 	}
 }
