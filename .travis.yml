@@ -4,5 +4,5 @@ language: go
 go:
   - "1.6.3"
 
-script: go build mira.go && ./gradlew clean onejar
+script: go build mira.go && ./gradlew clean test onejar
 
