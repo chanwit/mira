@@ -9,6 +9,7 @@ class SwarmModePlugin /* implements Plugin*/  {
 
 	def init(bindings) {
 		bindings['swarm'] = this.swarm
+		// println "swarm plugin initialized ..."
 	}
 
 	def managers = []
@@ -78,6 +79,16 @@ class SwarmModePlugin /* implements Plugin*/  {
 	}
 
 	def afterProvision() {
+		// pre-condition
+
+		_afterProvision()
+
+		// post-condition
+		// all manager must present
+		// all worker must present
+	}
+
+	def _afterProvision() {
 		def (ip, e) = env("${managers[0]}")
 		def cli = new DockerClientImpl(e)
 		def config = [

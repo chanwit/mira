@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<configuration>
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <logger name="com.aestasit" level="INFO" />
+
+  <root level="ERROR">
+    <appender-ref ref="STDOUT" />
+  </root>
+
+</configuration>

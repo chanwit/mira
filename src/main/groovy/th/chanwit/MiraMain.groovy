@@ -7,6 +7,7 @@ import de.gesellix.docker.client.*
 import de.gesellix.docker.client.config.*
 
 import th.chanwit.plugin.SwarmModePlugin
+import th.chanwit.plugin.CalicoPlugin
 
 class MiraMain {
 
@@ -105,6 +106,11 @@ class MiraMain {
       switch(map['plugin']) {
         case 'swarm':
           def p = new SwarmModePlugin()
+          p.init(binding)
+          plugins << p
+          break
+        case 'calico':
+          def p = new CalicoPlugin()
           p.init(binding)
           plugins << p
           break

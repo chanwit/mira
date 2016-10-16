@@ -25,7 +25,17 @@ class BuildCommand {
       return MiraAction.error
     }
 
-    def buildResult = dockerClient.build(newBuildContext(dir))
+    def args = [:]
+
+    if (map["no-cache"]) {
+      args["nocache"] =  map["no-cache"]
+    }
+
+    def buildResult = dockerClient.build(
+      newBuildContext(dir),
+      args
+    )
+
     if (buildResult =~ /\w{12}/) {
       if (map["tag"]) {
         def tagResult = dockerClient.tag("$buildResult", map["tag"])

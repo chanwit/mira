@@ -1,13 +1,14 @@
 apply plugin: 'groovy'
 apply plugin: 'application'
-apply plugin: 'gradle-one-jar'
 
 buildscript {
     repositories {
         mavenCentral()
+        maven { url 'https://plugins.gradle.org/m2/' }
     }
     dependencies {
         classpath 'com.github.rholder:gradle-one-jar:1.0.4'
+        classpath 'gradle.plugin.edu.sc.seis.gradle:launch4j:1.6.2'
     }
 }
 
@@ -18,12 +19,29 @@ repositories {
     maven { url 'http://dl.bintray.com/gesellix/docker-utils' }
 }
 
+apply plugin: 'edu.sc.seis.launch4j'
+apply plugin: 'gradle-one-jar'
+
+launch4j {
+    outfile = "../../mira.exe"
+    chdir = ""
+    opt = "-Done-jar.silent=true"
+    headerType = "console"
+    jar = "../libs/mira-standalone.jar"
+    jreMinVersion = "1.7.0"
+}
+
 dependencies {
     compile 'org.codehaus.groovy:groovy:2.4.7'
     compile 'org.slf4j:slf4j-api:1.7.21'
     compile 'org.slf4j:slf4j-nop:1.7.21'
 
     compile 'de.gesellix:docker-client:2016-10-07T18-47-59'
+    compile ('com.aestasit.infrastructure.sshoogr:sshoogr:0.9.25') {
+        exclude group:'org.slf4j', module:'slf4j-api'
+        exclude group:'org.slf4j', module:'jcl-over-slf4j'
+        // exclude group:'ch.qos.logback', module:'logback-classic'
+    }
 
     testCompile("org.spockframework:spock-core:1.0-groovy-2.4") {
         exclude group:"org.codehaus.groovy", module:"groovy-all"
@@ -37,3 +55,4 @@ task onejar(type: OneJar) {
   mainClass = mainClassName
   useStable = true
 }
+

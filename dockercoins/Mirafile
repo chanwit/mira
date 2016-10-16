@@ -8,18 +8,27 @@ SERVICES = [rng, hasher, redis, webui, worker]
 
 swarm {
   managers mg0
-  workers  node[0..3]
+  // node0, node1, node2
+  workers  node[0..2]
 }
 
 task(provision) {
   docker machine create (DO_512MB_SGP, mg0)
-  docker machine create (DO_512MB_SGP, node[0..3])
+  docker machine create (DO_512MB_SGP, node[0..2])
+
+  docker machine ssh (mg0) {
+    exec 'df -h'
+  }
 }
 
 task(build) {
   docker machine env mg0
   SERVICES.each {
-    docker build (tag: "$REPO/$it:$TAG", it)
+    docker build (
+      tag: "$REPO/$it:$TAG",
+      "no-cache": true,
+      it
+    )
   }
 }
 
@@ -67,6 +76,6 @@ task(down) {
 }
 
 task(clean) {
-  docker machine rm node[0..3]
+  docker machine rm node[0..2]
   docker machine rm mg0
 }

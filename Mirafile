@@ -3,7 +3,7 @@ REPO = "chanwit"
 TAG  = "v1"
 
 include template: 'digitalocean'
-apply   plugin: 'swarm'
+apply plugin: 'swarm'
 
 services = [worker, webui, redis, hasher, rng]
 
@@ -32,6 +32,10 @@ task(clean) {
 }
 
 task(push) {
+	docker machine ssh(mg0) {
+		exec 'df -h'
+    }
+
 	/*
 	TOKEN = docker swarm join-token manager
 	println TOKEN

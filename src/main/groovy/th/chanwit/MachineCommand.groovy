@@ -3,6 +3,8 @@ package th.chanwit
 import de.gesellix.docker.client.config.*
 import groovy.json.JsonSlurper
 import java.util.concurrent.*
+import com.aestasit.infrastructure.ssh.dsl.SshDslEngine
+import com.aestasit.infrastructure.ssh.SshOptions
 
 class MachineCommand {
 
@@ -85,6 +87,27 @@ class MachineCommand {
 		def cmd = ["docker-machine", "rm", "-f", "$arg"]
 		def proc = cmd.execute()
 		proc.waitForProcessOutput( System.out, System.err )
+	}
+
+	def ssh(machine, cl) {
+		String dir = "${System.getProperty('user.home')}/.docker/machine/machines/${machine}"
+		String text = new File(dir, "config.json").text
+		def json = new JsonSlurper().parseText(text)
+		def ip =   json['Driver']['IPAddress']
+		def user = json['Driver']['SSHUser']
+		def port = json['Driver']['SSHPort']
+		def keyPath = json['Driver']['SSHKeyPath']
+
+		def options = new SshOptions()
+		options.with {
+  			defaultHost = ip
+  			defaultUser = user
+  			defaultPort = port
+  			defaultKeyFile = new File(keyPath)
+  			trustUnknownHosts = true
+  		}
+		def engine = new SshDslEngine(options)
+		engine.remoteSession(cl)
 	}
 
 	private _env() {
