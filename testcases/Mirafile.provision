@@ -1,0 +1,55 @@
+REPO = "chanwit"
+TAG  = "v1"
+
+task(provision) {
+
+	docker machine create (
+		driver: digitalocean,
+		digitalocean: [
+			image: "docker-16-04"
+		],
+		engine: [
+			"storage-driver": overlay2
+		],
+		mg0
+	)
+
+	100.times { i ->
+		docker machine create (
+			driver: digitalocean,
+			digitalocean: [
+				image: "docker-16-04"
+			],
+			engine: [
+				"storage-driver": overlay2
+			],
+			"node$i"
+		)
+	}
+
+	docker machine env mg0
+	docker swarm init (
+		"advertise-addr": mg0.ip_addr
+	)
+
+	TOKEN = docker swarm join-token worker
+	100.times { i ->
+		docker machine env "node$i"
+		docker swarm join (
+			token: TOKEN,
+			mg0.ip_addr
+		)
+	}
+
+}
+
+task(up) {
+	docker service create (
+		name:  nginx,
+		image: nginx,
+	)
+}
+
+task(down) {
+	docker service rm nginx
+}
