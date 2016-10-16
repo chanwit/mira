@@ -138,7 +138,15 @@ class MiraMain {
     config.setScriptBaseClass("th.chanwit.BaseScript")
     def shell = new GroovyShell(binding, config)
 
-    shell.evaluate new File("Mirafile")
+    def DEFAULT_FILE = "Mirafile"
+    if(args.size() >= 2) {
+      if(args[0] == "-f") {
+        DEFAULT_FILE = args[1]
+        args = args.drop(2)
+      }
+    }
+
+    shell.evaluate new File(DEFAULT_FILE)
 
     if(args.size() == 0) {
       println "up:"
