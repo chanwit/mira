@@ -1,0 +1,9 @@
+VBOX_512 = [
+        driver: "virtualbox",
+        virtualbox: [
+                "memory": "512"
+        ],
+        engine: [
+                "storage-driver": "aufs"
+        ]
+]

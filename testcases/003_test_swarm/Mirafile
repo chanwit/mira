@@ -1,0 +1,20 @@
+apply plugin: 'swarm'
+
+swarm {
+    manager mg0
+    workers wk[0..2]
+}
+
+task(provision) {
+    docker machine create (driver: "virtualbox", virtualbox: [memory: "512"], mg0)
+    docker machine create (driver: "virtualbox", virtualbox: [memory: "512"], wk[0..2])
+}
+
+task(up) {
+
+}
+
+task(clean) {
+    docker machine rm wk[0..2]
+    docker machine rm mg0
+}

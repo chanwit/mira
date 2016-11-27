@@ -1,0 +1,15 @@
+include template: 'vbox'
+
+task(provision) {
+    docker machine create (VBOX_512, mg0)
+}
+
+task(up) {
+    docker machine env mg0
+    result = docker info
+    assert result.MemTotal == 516468736
+}
+
+task(clean) {
+    docker machine rm mg0
+}

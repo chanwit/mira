@@ -1,0 +1,13 @@
+include template: 'virtualbox'
+apply plugin: 'swarm'
+
+swarm {
+    manager mg0
+    workers node[1..3]
+}
+
+task(provision) {
+    docker machine create (driver: "virtualbox", mg0)
+    docker machine create (driver: "virtualbox", node[1..3])
+}
+

@@ -1,4 +1,4 @@
-include template: 'digitalocean'
+include template: 'vbox'
 apply   plugin: 'swarm'
 
 REPO = "chanwit"
@@ -8,13 +8,12 @@ SERVICES = [rng, hasher, redis, webui, worker]
 
 swarm {
   managers mg0
-  // node0, node1, node2
   workers  node[0..2]
 }
 
 task(provision) {
-  docker machine create (DO_512MB_SGP, mg0)
-  docker machine create (DO_512MB_SGP, node[0..2])
+  docker machine create (VBOX_512, mg0)
+  docker machine create (VBOX_512, node[0..2])
 
   docker machine ssh (mg0) {
     exec 'df -h'

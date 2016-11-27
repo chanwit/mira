@@ -1,0 +1,9 @@
+apply plugin:'swarm'
+
+task(provision) {
+    docker machine create(driver:"virtualbox", mg0)
+}
+
+task(clean) {
+    docker machine rm mg0
+}

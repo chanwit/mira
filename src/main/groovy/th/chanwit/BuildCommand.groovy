@@ -1,54 +1,54 @@
 package th.chanwit
 
-import de.gesellix.docker.client.*
+import de.gesellix.docker.client.DockerClient
 import de.gesellix.docker.client.builder.BuildContextBuilder
 
 class BuildCommand {
 
-  private DockerClient dockerClient
+    private DockerClient dockerClient
 
-  InputStream newBuildContext(File baseDirectory) {
-    def buildContext = File.createTempFile("buildContext", ".tar")
-    buildContext.deleteOnExit()
-    BuildContextBuilder.archiveTarFilesRecursively(baseDirectory, buildContext)
-    return new FileInputStream(buildContext)
-  }
-
-  BuildCommand(DockerClient cli){
-    this.dockerClient = cli
-  }
-
-  def build(Map map, Symbol arg) {
-    def dir = new File("$arg")
-    if (dir.exists() == false) {
-      println "$arg skipped the build"
-      return MiraAction.error
+    InputStream newBuildContext(File baseDirectory) {
+        def buildContext = File.createTempFile("buildContext", ".tar")
+        buildContext.deleteOnExit()
+        BuildContextBuilder.archiveTarFilesRecursively(baseDirectory, buildContext)
+        return new FileInputStream(buildContext)
     }
 
-    def args = [:]
-
-    if (map["no-cache"]) {
-      args["nocache"] =  map["no-cache"]
+    BuildCommand(DockerClient cli) {
+        this.dockerClient = cli
     }
 
-    def buildResult = dockerClient.build(
-      newBuildContext(dir),
-      args
-    )
-
-    if (buildResult =~ /\w{12}/) {
-      if (map["tag"]) {
-        def tagResult = dockerClient.tag("$buildResult", map["tag"])
-        if (tagResult.status.code == 201) {
-          println "${buildResult} ${map['tag']} built successfully"
-          return MiraAction.build
-        } else {
-          return MiraAction.error
+    def build(Map map, Symbol arg) {
+        def dir = new File("$arg")
+        if (dir.exists() == false) {
+            println "$arg skipped the build"
+            return MiraAction.error
         }
-      }
-      return MiraAction.build
+
+        def args = [:]
+
+        if (map["no-cache"]) {
+            args["nocache"] = map["no-cache"]
+        }
+
+        def buildResult = dockerClient.build(
+                newBuildContext(dir),
+                args
+        )
+
+        if (buildResult =~ /\w{12}/) {
+            if (map["tag"]) {
+                def tagResult = dockerClient.tag("$buildResult", map["tag"])
+                if (tagResult.status.code == 201) {
+                    println "${buildResult} ${map['tag']} built successfully"
+                    return MiraAction.build
+                } else {
+                    return MiraAction.error
+                }
+            }
+            return MiraAction.build
+        }
+        return MiraAction.error
     }
-    return MiraAction.error
-  }
 
 }
