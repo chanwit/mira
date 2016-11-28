@@ -1,0 +1,81 @@
+include template: 'vbox'
+apply plugin: 'swarm'
+
+REPO = "chanwit"
+TAG = "v1"
+
+SERVICES = [rng, hasher, redis, webui, worker]
+
+swarm {
+    managers mg0
+    workers wk[0..2]
+}
+
+task(provision) {
+    docker machine create(VBOX_512, mg0)
+    docker machine create(VBOX_512, wk[0..2])
+
+    docker machine ssh(mg0) {
+        exec 'sudo df -h'
+    }
+}
+
+task(build) {
+    docker machine env mg0
+    SERVICES.each {
+        docker build(
+            "tag": "$REPO/$it:$TAG",
+            "no-cache": true,
+            it
+        )
+    }
+}
+
+task(push) {
+    docker machine env mg0
+    // docker login
+    (SERVICES - [redis]).each {
+        docker push "$REPO/$it:$TAG"
+    }
+}
+
+task(up) {
+    docker network create(driver: overlay, mynet)
+    docker service create(
+        name: rng,
+        network: [mynet],
+        image: "$REPO/rng:$TAG",
+    )
+    docker service create(
+        name: hasher,
+        network: [mynet],
+        image: "$REPO/hasher:$TAG",
+    )
+    docker service create(
+        name: redis,
+        network: [mynet],
+        image: redis,
+    )
+    docker service create(
+        name: webui,
+        network: [mynet],
+        image: "$REPO/webui:$TAG",
+        publish: [80: 80],
+    )
+    docker service create(
+        name: worker,
+        network: [mynet],
+        image: "$REPO/worker:$TAG",
+    )
+
+}
+
+task(down) {
+    SERVICES.each { docker service rm it }
+    docker network rm mynet
+}
+
+task(clean) {
+    docker machine rm wk[0..2]
+    docker machine rm mg0
+}

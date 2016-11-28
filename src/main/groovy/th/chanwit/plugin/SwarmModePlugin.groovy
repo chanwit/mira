@@ -5,7 +5,7 @@ import de.gesellix.docker.client.config.DockerEnv
 import groovy.json.JsonSlurper
 import th.chanwit.MachineCommand
 
-class SwarmModePlugin implements Plugin {
+class SwarmModePlugin extends AbstractPlugin {
 
     void init(Binding bindings) {
         bindings['swarm'] = this.swarm
@@ -83,7 +83,8 @@ class SwarmModePlugin implements Plugin {
         return [ip, result]
     }
 
-    def afterProvision() {
+    @Override
+    void afterProvision() {
         // pre-condition
 
         _afterProvision()
@@ -93,7 +94,7 @@ class SwarmModePlugin implements Plugin {
         // all worker must present
     }
 
-    def _afterProvision() {
+    void _afterProvision() {
         if (managers.size() == 0) {
             return
         }
@@ -147,14 +148,16 @@ class SwarmModePlugin implements Plugin {
         }
     }
 
-    def beforeUp() {
+    @Override
+    void beforeUp() {
         if (managers.size() > 0) {
             println "(${managers[0]}) set as docker host by swarm plugin"
             new MachineCommand().env(managers[0])
         }
     }
 
-    def beforeDown() {
+    @Override
+    void beforeDown() {
         if (managers.size() > 0) {
             println "(${managers[0]}) set as docker host by swarm plugin"
             new MachineCommand().env(managers[0])

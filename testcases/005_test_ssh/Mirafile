@@ -1,0 +1,5 @@
+task(up) {
+    docker machine ssh(mg0) {
+        exec 'sudo df -h'
+    }
+}

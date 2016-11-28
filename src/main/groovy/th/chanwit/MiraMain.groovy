@@ -29,6 +29,7 @@ class MiraMain {
     static class Holder {
         def up
         def down
+
         def build
         def push
 
@@ -151,42 +152,32 @@ class MiraMain {
         }
 
         shell.evaluate new File(DEFAULT_FILE)
+        List actions
+        if (args.size() == 0) {
+            actions = ['up']
+        } else {
+            actions = args
+        }
+
+        // check if each action is defined
+        actions.each { String action ->
+            if (holder."$action" == null) {
+                println "Task $action is not defined."
+                return
+            }
+        }
 
         try {
-            if (args.size() == 0) {
-                println "up:"
-                holder.up()
-            } else {
-                // mira build up
-                args.each { action ->
-                    if (holder."$action" == null) {
-                        println "Task $action is not defined."
-                        return
-                    } else {
-                        println "$action:"
-                    }
-                    switch ("$action") {
-                        case "up":
-                            for (p in plugins) {
-                                p.beforeUp()
-                            }
-                            break
-                        case "down":
-                            for (p in plugins) {
-                                p.beforeDown()
-                            }
-                            break
-                    }
-                    holder."${action}"()
-                    switch ("$action") {
-                        case "provision":
-                            for (p in plugins) {
-                                p.afterProvision()
-                            }
-                            break
-                    }
-                }
+            // mira build up
+            actions.each { String action ->
+                println "$action:"
+                plugins*."before${action.capitalize()}"()
+
+                holder."${action}"()
+
+                plugins*."after${action.capitalize()}"()
             }
+
         }
         catch (AssertionError e) {
             e.stackTrace.each {

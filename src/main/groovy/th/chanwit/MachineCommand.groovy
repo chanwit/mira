@@ -1,5 +1,6 @@
 package th.chanwit
 
+import com.aestasit.infrastructure.ssh.SshException
 import com.aestasit.infrastructure.ssh.SshOptions
 import com.aestasit.infrastructure.ssh.dsl.SshDslEngine
 import de.gesellix.docker.client.config.DockerEnv
@@ -98,17 +99,28 @@ class MachineCommand {
         def user = json['Driver']['SSHUser']
         def port = json['Driver']['SSHPort']
         def keyPath = json['Driver']['SSHKeyPath']
+        def driverName = json['DriverName']
 
         def options = new SshOptions()
         options.with {
             defaultHost = ip
             defaultUser = user
-            defaultPort = port
+            // fix machine 0.9-rc bug
+            if(driverName == 'virtualbox') {
+                defaultPort = 22
+            } else {
+                defaultPort = port
+            }
             defaultKeyFile = new File(keyPath)
             trustUnknownHosts = true
         }
+
         def engine = new SshDslEngine(options)
-        engine.remoteSession(cl)
+        try {
+            engine.remoteSession(cl)
+        }catch(SshException e) {
+            println(e.getMessage())
+        }
     }
 
     private _env() {
