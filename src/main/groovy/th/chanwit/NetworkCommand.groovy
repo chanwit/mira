@@ -1,6 +1,7 @@
 package th.chanwit
 
 import de.gesellix.docker.client.DockerClient
+import th.chanwit.plugin.Interceptor
 
 class NetworkCommand {
 
@@ -11,6 +12,12 @@ class NetworkCommand {
     }
 
     def create(Map map, Symbol arg) {
+
+        Interceptor interceptor = BaseScript.interceptor.get()
+        if(interceptor) {
+            (map, arg) = interceptor.beforeNetworkCreate(map, arg)
+        }
+
         if (!map['driver']) map['driver'] = "bridge"
 
         def networkConfig = [
@@ -30,6 +37,12 @@ class NetworkCommand {
     }
 
     def rm(Symbol arg) {
+
+        Interceptor interceptor = BaseScript.interceptor.get()
+        if (interceptor) {
+            arg = interceptor.beforeNetworkRm(arg)
+        }
+
         def result = dockerClient.rmNetwork("$arg")
         println "$arg network removed"
         return result

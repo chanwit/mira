@@ -1,18 +1,20 @@
 package th.chanwit
 
+import com.beust.jcommander.JCommander
 import de.gesellix.docker.client.DockerClient
 import de.gesellix.docker.client.DockerClientImpl
 import de.gesellix.docker.client.config.DockerEnv
 import org.codehaus.groovy.control.CompilerConfiguration
 import org.codehaus.groovy.control.customizers.ImportCustomizer
-import th.chanwit.plugin.CalicoPlugin
-import th.chanwit.plugin.Plugin
-import th.chanwit.plugin.SwarmModePlugin
+import th.chanwit.cli.ActiveCommand
+import th.chanwit.cli.InitCommand
+import th.chanwit.cli.Options
+import th.chanwit.plugin.*
 
 class MiraMain {
 
     static DockerClient createClient() {
-        DockerEnv env = (DockerEnv) BaseScript.envLocal.get()
+        DockerEnv env = (DockerEnv) BaseScript.env.get()
         DockerClient cli
         if (env) {
             cli = new DockerClientImpl(env)
@@ -68,6 +70,19 @@ class MiraMain {
     }
 
     static void main(String[] args) {
+        def options = new Options()
+        def jc = new JCommander(options)
+        def init = new InitCommand()
+        jc.addCommand("init", init)
+        def active = new ActiveCommand()
+        jc.addCommand("active", active)
+
+        jc.parse(args)
+
+        if(options.help) {
+            jc.usage()
+            return
+        }
 
         // handle top-level commands
         MiraAction.metaClass.call = { Symbol sym ->
@@ -111,6 +126,7 @@ class MiraMain {
         def pluginClasses = [
                 "swarm" : SwarmModePlugin,
                 "calico": CalicoPlugin,
+                "pod"   : PodPlugin,
         ]
         def plugins = []
 
@@ -121,6 +137,9 @@ class MiraMain {
             Plugin p = cls.newInstance()
             p.init(binding)
             plugins << p
+            if (p instanceof Interceptor) {
+                BaseScript.interceptor.set(p)
+            }
         }
 
         def binding = new Binding(
@@ -144,19 +163,33 @@ class MiraMain {
         config.setScriptBaseClass("th.chanwit.BaseScript")
         def shell = new GroovyShell(binding, config)
 
-        if (args.size() >= 2) {
-            if (args[0] == "-f") {
-                DEFAULT_FILE = args[1]
-                args = args.drop(2)
-            }
+        if (options.filename) {
+            DEFAULT_FILE = options.filename
         }
 
-        shell.evaluate new File(DEFAULT_FILE)
-        List actions
-        if (args.size() == 0) {
-            actions = ['up']
-        } else {
-            actions = args
+        switch (jc.getParsedCommand()) {
+            case "init":
+                if (new File(".mira").mkdir() == true) {
+                    new File(".mira/active").write("default\n")
+                }
+                return
+            case "active":
+                if (active.cluster.size() >= 1) {
+                    new File(".mira/active").write("${active.cluster[0]}\n")
+                    println(active.cluster[0])
+                } else {
+                    println(new File(".mira/active").text.trim())
+                }
+                return
+        }
+
+        List actions = options.tasks
+
+        try {
+            shell.evaluate new File(DEFAULT_FILE)
+        } catch(FileNotFoundException e) {
+            println("File not found: $DEFAULT_FILE")
+            return
         }
 
         // check if each action is defined

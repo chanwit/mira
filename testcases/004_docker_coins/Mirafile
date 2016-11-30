@@ -33,7 +33,6 @@ task(build) {
 
 task(push) {
     docker machine env mg0
-    // docker login
     (SERVICES - [redis]).each {
         docker push "$REPO/$it:$TAG"
     }

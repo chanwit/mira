@@ -1,6 +1,7 @@
 package th.chanwit
 
 import de.gesellix.docker.client.DockerClient
+import th.chanwit.plugin.Interceptor
 
 class ServiceCommand {
 
@@ -11,6 +12,12 @@ class ServiceCommand {
     }
 
     def create(Map map, String args = "") {
+
+        Interceptor interceptor = BaseScript.interceptor.get()
+        if(interceptor) {
+            (map, args) = interceptor.beforeServiceCreate(map, args)
+        }
+
         if (!map["image"]) throw new Exception("service create: no 'image' specified")
 
         def publishes = []
@@ -76,6 +83,12 @@ class ServiceCommand {
     }
 
     def rm(name) {
+
+        Interceptor interceptor = BaseScript.interceptor.get()
+        if(interceptor) {
+            name = interceptor.beforeServiceRm("$name")
+        }
+
         try {
             def result = dockerClient.rmService("$name")
             println "$name service removed"

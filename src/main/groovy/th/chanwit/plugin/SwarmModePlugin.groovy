@@ -94,7 +94,7 @@ class SwarmModePlugin extends AbstractPlugin {
         // all worker must present
     }
 
-    void _afterProvision() {
+    private void _afterProvision() {
         if (managers.size() == 0) {
             return
         }
@@ -102,15 +102,15 @@ class SwarmModePlugin extends AbstractPlugin {
         def (ip, e) = env("${managers[0]}")
         def cli = new DockerClientImpl(e)
         def config = [
-                "ListenAddr"     : "0.0.0.0:2377",
-                "AdvertiseAddr"  : "${ip}:2377",
-                "ForceNewCluster": false,
-                "Spec"           : [
-                        "Orchestration": [:],
-                        "Raft"         : [:],
-                        "Dispatcher"   : [:],
-                        "CAConfig"     : [:],
-                ]
+            "ListenAddr"     : "0.0.0.0:2377",
+            "AdvertiseAddr"  : "${ip}:2377",
+            "ForceNewCluster": false,
+            "Spec"           : [
+                "Orchestration": [:],
+                "Raft"         : [:],
+                "Dispatcher"   : [:],
+                "CAConfig"     : [:],
+            ]
         ]
         cli.initSwarm(config)
         println "(${managers[0]}) initialized swarm cluster ..."

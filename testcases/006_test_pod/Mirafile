@@ -1,0 +1,22 @@
+apply plugin: 'pod'
+
+pod {
+    prefix 'app'
+}
+
+/*
+   mira scale app=5
+   1. use skydns as
+   2. network create with pod.name + _ + network
+ */
+task(up) {
+
+    docker network create(driver: 'overlay', mynet)
+
+}
+
+task(down) {
+
+    docker network rm mynet
+
+}

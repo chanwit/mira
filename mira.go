@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -47,6 +46,7 @@ func main() {
 		}
 	}
 
+	/*
 	if len(os.Args) == 1 {
 		fmt.Printf("HOME=%s\n", home)
 		fmt.Printf("MIRA_HOME=%s\n", miraHome)
@@ -54,6 +54,7 @@ func main() {
 		fmt.Printf("java: %s\n", executable)
 		os.Exit(1)
 	}
+	*/
 
 	cmd := exec.Command(executable, args...)
 	cmd.Stdin = os.Stdin

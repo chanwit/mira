@@ -13,9 +13,10 @@ import java.util.concurrent.TimeUnit
 class MachineCommand {
 
     DockerEnv env(Symbol machineName) {
+
         if ("$machineName" == "-u") {
             DockerEnv e = new DockerEnv()
-            BaseScript.envLocal.set(e)
+            BaseScript.env.set(e)
             return e
         }
 
@@ -23,11 +24,11 @@ class MachineCommand {
         String text = new File(dir, "config.json").text
         def json = new JsonSlurper().parseText(text)
         DockerEnv result = new DockerEnv(
-                tlsVerify: "1",
-                dockerHost: "tcp://${json['Driver']['IPAddress']}:2376",
-                certPath: dir,
+            tlsVerify: "1",
+            dockerHost: "tcp://${json['Driver']['IPAddress']}:2376",
+            certPath: dir,
         )
-        BaseScript.envLocal.set(result)
+        BaseScript.env.set(result)
         return result
     }
 
@@ -64,7 +65,8 @@ class MachineCommand {
             return ["--engine-$k", "$v"]
         }.flatten()
 
-        def cmd = ["docker-machine", "create", "-d", driver] +
+        def cmd = ["docker-machine", "--storage-path", ".mira/$cluster",
+                   "create", "-d", driver] +
                 driverArgs +
                 engineArgs +
                 ["$arg"]
