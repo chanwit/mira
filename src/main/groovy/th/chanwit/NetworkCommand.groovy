@@ -14,21 +14,21 @@ class NetworkCommand {
     def create(Map map, Symbol arg) {
 
         Interceptor interceptor = BaseScript.interceptor.get()
-        if(interceptor) {
+        if (interceptor) {
             (map, arg) = interceptor.beforeNetworkCreate(map, arg)
         }
 
         if (!map['driver']) map['driver'] = "bridge"
 
         def networkConfig = [
-            "Driver"        : "${map['driver']}",
-            "EnableIPv6"    : false,
-            "IPAM"          : [
-                "Driver" : "default",
-                "Options": null,
-                "Config" : [],
-            ],
-            "CheckDuplicate": true,
+                "Driver"        : "${map['driver']}",
+                "EnableIPv6"    : false,
+                "IPAM"          : [
+                        "Driver" : "default",
+                        "Options": null,
+                        "Config" : [],
+                ],
+                "CheckDuplicate": true,
         ]
 
         def id = dockerClient.createNetwork("$arg", networkConfig).content.Id

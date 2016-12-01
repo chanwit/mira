@@ -15,5 +15,5 @@ enum MiraAction {
     clean,
 
     // special action as the return value
-    error
+            error
 }

@@ -1,7 +1,6 @@
 package th.chanwit
 
 import de.gesellix.docker.client.DockerClient
-import java.io.Console
 
 class LoginCommand {
 

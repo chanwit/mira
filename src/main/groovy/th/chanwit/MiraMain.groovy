@@ -13,6 +13,9 @@ import th.chanwit.plugin.*
 
 class MiraMain {
 
+
+    public static final String ACTIVE_REPO = ".mira/active_repo"
+
     static DockerClient createClient() {
         DockerEnv env = (DockerEnv) BaseScript.env.get()
         DockerClient cli
@@ -72,16 +75,34 @@ class MiraMain {
     static void main(String[] args) {
         def options = new Options()
         def jc = new JCommander(options)
-        def init = new InitCommand()
-        jc.addCommand("init", init)
-        def active = new ActiveCommand()
-        jc.addCommand("active", active)
+        jc.programName = "mira"
 
-        jc.parse(args)
+        try {
+            jc.parse(args)
+        } catch (e) {
+        }
 
-        if(options.help) {
+        def cmds = [
+                init  : new InitCommand(),
+                active: new ActiveCommand()
+        ]
+
+        if (options.help) {
+            cmds.each { k, v ->
+                jc.addCommand(k, v)
+            }
             jc.usage()
             return
+        }
+
+        // if the first task is the top-level command,
+        // do parsing again
+        if (options.tasks[0] in cmds.keySet()) {
+            jc = new JCommander(options)
+            cmds.each { k, v ->
+                jc.addCommand(k, v)
+            }
+            jc.parse(args)
         }
 
         // handle top-level commands
@@ -170,15 +191,28 @@ class MiraMain {
         switch (jc.getParsedCommand()) {
             case "init":
                 if (new File(".mira").mkdir() == true) {
-                    new File(".mira/active").write("default\n")
+                    new File(ACTIVE_REPO).write("default\n")
+                    // create the default repo
+                    new File(".mira/default").mkdir()
+                }
+                InitCommand init = cmds["init"] as InitCommand
+                if ((new File(DEFAULT_FILE).exists() == false)
+                        || (new File(DEFAULT_FILE).exists() && init.force)) {
+                    new File(DEFAULT_FILE).write('''
+task(up) {
+  println "Hello World, Mirafile"
+}
+''')
                 }
                 return
             case "active":
+                ActiveCommand active = cmds["active"] as ActiveCommand
                 if (active.cluster.size() >= 1) {
-                    new File(".mira/active").write("${active.cluster[0]}\n")
+                    new File(ACTIVE_REPO).write("${active.cluster[0]}\n")
+                    new File(".mira/${active.cluster[0]}").mkdir()
                     println(active.cluster[0])
                 } else {
-                    println(new File(".mira/active").text.trim())
+                    println(new File(ACTIVE_REPO).text.trim())
                 }
                 return
         }
@@ -187,16 +221,21 @@ class MiraMain {
 
         try {
             shell.evaluate new File(DEFAULT_FILE)
-        } catch(FileNotFoundException e) {
+        } catch (FileNotFoundException e) {
             println("File not found: $DEFAULT_FILE")
-            return
+            System.exit(1)
         }
 
         // check if each action is defined
         actions.each { String action ->
-            if (holder."$action" == null) {
-                println "Task $action is not defined."
-                return
+            try {
+                if (holder."$action" == null) {
+                    println "Task '$action' is not defined."
+                    System.exit(1)
+                }
+            } catch (e) {
+                println "Task '$action' is not supported."
+                System.exit(1)
             }
         }
 
@@ -214,7 +253,7 @@ class MiraMain {
         }
         catch (AssertionError e) {
             e.stackTrace.each {
-                if (it.fileName == "Mirafile" && it.lineNumber != -1) {
+                if (it.fileName == DEFAULT_FILE && it.lineNumber != -1) {
                     println(it.fileName + ":" + it.lineNumber)
                 }
             }

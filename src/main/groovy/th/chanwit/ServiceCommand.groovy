@@ -14,7 +14,7 @@ class ServiceCommand {
     def create(Map map, String args = "") {
 
         Interceptor interceptor = BaseScript.interceptor.get()
-        if(interceptor) {
+        if (interceptor) {
             (map, args) = interceptor.beforeServiceCreate(map, args)
         }
 
@@ -31,9 +31,9 @@ class ServiceCommand {
                 }
 
                 return [
-                    "Protocol"     : protocol,
-                    "PublishedPort": Integer.valueOf(k),
-                    "TargetPort"   : Integer.valueOf(v)
+                        "Protocol"     : protocol,
+                        "PublishedPort": Integer.valueOf(k),
+                        "TargetPort"   : Integer.valueOf(v)
                 ]
             }
         }
@@ -51,30 +51,30 @@ class ServiceCommand {
         if (replicas < 1) throw new Exception("service create: replicas cannot be < 1")
 
         def serviceConfig = [
-            "Name"        : "${map['name']}",
-            "TaskTemplate": [
-                "ContainerSpec": [
-                    "Image": "${map['image']}",
+                "Name"        : "${map['name']}",
+                "TaskTemplate": [
+                        "ContainerSpec": [
+                                "Image": "${map['image']}",
+                        ],
+                        "Resources"    : [
+                                "Limits"      : [:],
+                                "Reservations": [:],
+                        ],
+                        "RestartPolicy": [:],
+                        "Placement"    : [:],
                 ],
-                "Resources"    : [
-                    "Limits"      : [:],
-                    "Reservations": [:],
+                "Mode"        : [
+                        "Replicated": [
+                                "Replicas": replicas,
+                        ]
                 ],
-                "RestartPolicy": [:],
-                "Placement"    : [:],
-            ],
-            "Mode": [
-                "Replicated": [
-                    "Replicas": replicas,
-                ]
-            ],
-            "UpdateConfig": [
-                "Parallelism": 1
-            ],
-            "EndpointSpec": [
-                "Ports": publishes,
-            ],
-            "Networks": networks,
+                "UpdateConfig": [
+                        "Parallelism": 1
+                ],
+                "EndpointSpec": [
+                        "Ports": publishes,
+                ],
+                "Networks"    : networks,
         ]
         // println serviceConfig
         def id = dockerClient.createService(serviceConfig).content.ID
@@ -85,7 +85,7 @@ class ServiceCommand {
     def rm(name) {
 
         Interceptor interceptor = BaseScript.interceptor.get()
-        if(interceptor) {
+        if (interceptor) {
             name = interceptor.beforeServiceRm("$name")
         }
 

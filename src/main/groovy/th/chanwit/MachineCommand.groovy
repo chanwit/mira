@@ -20,13 +20,16 @@ class MachineCommand {
             return e
         }
 
-        String dir = "${System.getProperty('user.home')}/.docker/machine/machines/${machineName}"
+        String repo = new File(".mira/active_repo").text.trim()
+
+        // String dir = "${System.getProperty('user.home')}/.docker/machine/machines/${machineName}"
+        String dir = ".mira/$repo/machines/${machineName}"
         String text = new File(dir, "config.json").text
         def json = new JsonSlurper().parseText(text)
         DockerEnv result = new DockerEnv(
-            tlsVerify: "1",
-            dockerHost: "tcp://${json['Driver']['IPAddress']}:2376",
-            certPath: dir,
+                tlsVerify: "1",
+                dockerHost: "tcp://${json['Driver']['IPAddress']}:2376",
+                certPath: dir,
         )
         BaseScript.env.set(result)
         return result
@@ -65,15 +68,25 @@ class MachineCommand {
             return ["--engine-$k", "$v"]
         }.flatten()
 
-        def cmd = ["docker-machine", "--storage-path", ".mira/$cluster",
+
+
+        String repo = new File(".mira/active_repo").text.trim()
+        String cwd = System.getProperty("user.dir")
+        def cmd = ["docker-machine", "-s", "$cwd/.mira/$repo",
                    "create", "-d", driver] +
                 driverArgs +
                 engineArgs +
                 ["$arg"]
 
         ecs.submit({
+            // run docker-machine
             def proc = cmd.execute()
             proc.waitForProcessOutput(System.out, System.err)
+
+            // hack to replace fullpath with relative path
+            String dir = "$cwd/.mira/$repo/machines/$arg"
+            String text = new File(dir, "config.json").text
+            new File(dir, "config.json").write(text.replace("$cwd/.mira/$repo", ".mira/$repo"))
         } as Runnable, Void)
     }
 
@@ -88,13 +101,20 @@ class MachineCommand {
     }
 
     def _rm(arg) {
-        def cmd = ["docker-machine", "rm", "-f", "$arg"]
+        String cwd = System.getProperty("user.dir")
+        String repo = new File(".mira/active_repo").text.trim()
+        def cmd = ["docker-machine",
+                   "-s", "$cwd/.mira/$repo",
+                   "rm", "-f", "$arg"]
         def proc = cmd.execute()
         proc.waitForProcessOutput(System.out, System.err)
     }
 
     def ssh(machine, cl) {
-        String dir = "${System.getProperty('user.home')}/.docker/machine/machines/${machine}"
+        String cwd = System.getProperty("user.dir")
+        String repo = new File(".mira/active_repo").text.trim()
+
+        String dir = "$cwd/.mira/$repo/machines/${machine}"
         String text = new File(dir, "config.json").text
         def json = new JsonSlurper().parseText(text)
         def ip = json['Driver']['IPAddress']
@@ -108,7 +128,7 @@ class MachineCommand {
             defaultHost = ip
             defaultUser = user
             // fix machine 0.9-rc bug
-            if(driverName == 'virtualbox') {
+            if (driverName == 'virtualbox') {
                 defaultPort = 22
             } else {
                 defaultPort = port
@@ -120,7 +140,7 @@ class MachineCommand {
         def engine = new SshDslEngine(options)
         try {
             engine.remoteSession(cl)
-        }catch(SshException e) {
+        } catch (SshException e) {
             println(e.getMessage())
         }
     }

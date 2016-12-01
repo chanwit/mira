@@ -71,7 +71,9 @@ class SwarmModePlugin extends AbstractPlugin {
             return []
         }
 
-        String dir = "${System.getProperty('user.home')}/.docker/machine/machines/${machineName}"
+        String repo = new File(".mira/active_repo").text.trim()
+
+        String dir = ".mira/$repo/machines/${machineName}"
         String text = new File(dir, "config.json").text
         def json = new JsonSlurper().parseText(text)
         DockerEnv result = new DockerEnv(
@@ -102,18 +104,20 @@ class SwarmModePlugin extends AbstractPlugin {
         def (ip, e) = env("${managers[0]}")
         def cli = new DockerClientImpl(e)
         def config = [
-            "ListenAddr"     : "0.0.0.0:2377",
-            "AdvertiseAddr"  : "${ip}:2377",
-            "ForceNewCluster": false,
-            "Spec"           : [
-                "Orchestration": [:],
-                "Raft"         : [:],
-                "Dispatcher"   : [:],
-                "CAConfig"     : [:],
-            ]
+                "ListenAddr"     : "0.0.0.0:2377",
+                "AdvertiseAddr"  : "${ip}:2377",
+                "ForceNewCluster": false,
+                "Spec"           : [
+                        "Orchestration": [:],
+                        "Raft"         : [:],
+                        "Dispatcher"   : [:],
+                        "CAConfig"     : [:],
+                ]
         ]
         cli.initSwarm(config)
         println "(${managers[0]}) initialized swarm cluster ..."
+
+
 
         def inspect = cli.inspectSwarm().content
         def mg_token = inspect.JoinTokens.Manager
