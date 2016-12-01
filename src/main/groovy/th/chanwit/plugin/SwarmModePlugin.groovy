@@ -117,7 +117,12 @@ class SwarmModePlugin extends AbstractPlugin {
         cli.initSwarm(config)
         println "(${managers[0]}) initialized swarm cluster ..."
 
+        // def inspect = cli.inspectSwarm().content
+        // cli.updateSwarm([version: inspect.Version.Index], [Name: "test"])
 
+        String repo = new File(".mira/active_repo").text.trim()
+        new File(".mira/index").append("$repo ${managers[0]}\n")
+        // println(">>> ${inspect.Spec.Name} ...")
 
         def inspect = cli.inspectSwarm().content
         def mg_token = inspect.JoinTokens.Manager

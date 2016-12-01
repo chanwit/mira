@@ -7,6 +7,7 @@ import de.gesellix.docker.client.config.DockerEnv
 import org.codehaus.groovy.control.CompilerConfiguration
 import org.codehaus.groovy.control.customizers.ImportCustomizer
 import th.chanwit.cli.ActiveCommand
+import th.chanwit.cli.ClusterCommand
 import th.chanwit.cli.InitCommand
 import th.chanwit.cli.Options
 import th.chanwit.plugin.*
@@ -84,7 +85,8 @@ class MiraMain {
 
         def cmds = [
                 init  : new InitCommand(),
-                active: new ActiveCommand()
+                active: new ActiveCommand(),
+                cluster: new ClusterCommand(),
         ]
 
         if (options.help) {
@@ -214,6 +216,9 @@ task(up) {
                 } else {
                     println(new File(ACTIVE_REPO).text.trim())
                 }
+                return
+            case "cluster":
+                println "cluster"
                 return
         }
 
