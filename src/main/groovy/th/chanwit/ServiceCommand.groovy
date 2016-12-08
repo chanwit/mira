@@ -51,7 +51,7 @@ class ServiceCommand {
         if (replicas < 1) throw new Exception("service create: replicas cannot be < 1")
 
         def serviceConfig = [
-                "Name"        : "${map['name']}",
+                "Name"        : "${map['imageName']}",
                 "TaskTemplate": [
                         "ContainerSpec": [
                                 "Image": "${map['image']}",
@@ -78,7 +78,7 @@ class ServiceCommand {
         ]
         // println serviceConfig
         def id = dockerClient.createService(serviceConfig).content.ID
-        println "${id[0..11]} service '${map['name']}' created from ${map['image']}"
+        println "${id[0..11]} service '${map['imageName']}' created from ${map['image']}"
         return id
     }
 

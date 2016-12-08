@@ -150,6 +150,7 @@ class MiraMain {
                 "swarm" : SwarmModePlugin,
                 "calico": CalicoPlugin,
                 "pod"   : PodPlugin,
+                "packer": PackerPlugin,
         ]
         def plugins = []
 

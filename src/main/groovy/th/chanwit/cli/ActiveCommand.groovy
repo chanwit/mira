@@ -5,6 +5,6 @@ import com.beust.jcommander.Parameters
 
 @Parameters(commandDescription = "Set active machine repository")
 class ActiveCommand {
-    @Parameter(description = "cluster name", arity = 1)
+    @Parameter(description = "cluster imageName", arity = 1)
     List<String> cluster = []
 }

@@ -42,8 +42,8 @@ class PodPlugin extends AbstractPlugin implements Interceptor {
 
     @Override
     def beforeServiceCreate(Map map, String args) {
-        def name = map['name']
-        map['name'] = "${prefix}_$name"
+        def name = map['imageName']
+        map['imageName'] = "${prefix}_$name"
         return [map, args]
     }
 
@@ -51,4 +51,10 @@ class PodPlugin extends AbstractPlugin implements Interceptor {
     def beforeServiceRm(String name) {
         return "${prefix}_${name}"
     }
+
+    @Override
+    def beforeMachineCreate(String image) {
+        return null
+    }
+
 }

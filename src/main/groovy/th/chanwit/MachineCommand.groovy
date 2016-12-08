@@ -5,6 +5,7 @@ import com.aestasit.infrastructure.ssh.SshOptions
 import com.aestasit.infrastructure.ssh.dsl.SshDslEngine
 import de.gesellix.docker.client.config.DockerEnv
 import groovy.json.JsonSlurper
+import th.chanwit.plugin.Interceptor
 
 import java.util.concurrent.ExecutorCompletionService
 import java.util.concurrent.Executors
@@ -36,6 +37,15 @@ class MachineCommand {
     }
 
     def create(Map map, arg) {
+
+        def driver = map['driver']
+        def driverMap = map["$driver"]
+
+        Interceptor interceptor = BaseScript.interceptor.get()
+        if (interceptor) {
+            driverMap["image"] = interceptor.beforeMachineCreate(driverMap["image"])
+        }
+
         def pool = Executors.newFixedThreadPool(10)
         def ecs = new ExecutorCompletionService<Void>(pool)
 
@@ -53,7 +63,7 @@ class MachineCommand {
 
     def _create(Map map, arg, ExecutorCompletionService<Void> ecs) {
         def driver = map['driver']
-        def driverMap = map[driver]
+        def driverMap = map["$driver"]
         def driverArgs = driverMap.collect { k, v ->
             if (v == false) {
                 return []
@@ -77,6 +87,8 @@ class MachineCommand {
                 driverArgs +
                 engineArgs +
                 ["$arg"]
+
+        println cmd
 
         ecs.submit({
             // run docker-machine

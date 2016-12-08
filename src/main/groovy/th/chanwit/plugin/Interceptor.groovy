@@ -12,4 +12,6 @@ interface Interceptor {
 
     def beforeServiceRm(String arg)
 
+    def beforeMachineCreate(String image)
+
 }

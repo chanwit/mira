@@ -1,0 +1,26 @@
+apply plugin: 'packer'
+
+TOKEN = "c5e00fddc59b39788afcf10695330decfa1e64544085c90ce48b9ccd64db4ff7"
+
+packer(digitalocean) {
+    name  "mira-prod"
+    token TOKEN
+
+    sh    "sudo bash -c 'curl -sSL https://test.docker.com | sh'"
+}
+
+task(provision) {
+    docker machine create(
+            driver: digitalocean,
+            digitalocean: [
+                    "access-token": TOKEN,
+                    "size"        : "1GB",
+                    "image"       : "mira-prod",
+            ],
+            test
+    )
+}
+
+task(clean) {
+    docker machine rm test
+}

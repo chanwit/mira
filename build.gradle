@@ -43,6 +43,7 @@ dependencies {
         exclude group:'org.slf4j', module:'jcl-over-slf4j'
         // exclude group:'ch.qos.logback', module:'logback-classic'
     }
+    compile 'com.myjeeva.digitalocean:digitalocean-api-client:2.7'
 
     testCompile("org.spockframework:spock-core:1.0-groovy-2.4") {
         exclude group:"org.codehaus.groovy", module:"groovy-all"
